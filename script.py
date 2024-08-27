@@ -1,28 +1,30 @@
-from pytube import YouTube
+import yt_dlp
 import tkinter as tk
 from tkinter import filedialog
-
 
 def baixar_musica_mp3():
     url = entry_url.get()
     caminho_destino = filedialog.askdirectory()
 
     try:
-        # Cria um objeto YouTube com a URL do vídeo
-        video = YouTube(url)
+        # Configuração do yt-dlp
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': f'{caminho_destino}/%(title)s.%(ext)s',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        }
 
-        # Obtém o stream de áudio com o formato MP3
-        stream = video.streams.filter(
-            only_audio=True, file_extension='mp4').first()
-
-        # Baixa o áudio para o diretório especificado
-        stream.download(output_path=caminho_destino)
-
-        resultado_label.config(
-            text=f"Download concluído: {video.title} (formato MP3)")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            resultado_label.config(
+                text=f"Download concluído: {info_dict['title']} (formato MP3)"
+            )
     except Exception as e:
         resultado_label.config(text=f"Erro durante o download: {e}")
-
 
 # Criar a janela principal
 janela = tk.Tk()
